@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id         Int          @id @default(autoincrement())
+  email      String       @unique
+  userName   String       @unique
+  role       UserRole     @default(USER)
+  status     UserStatus   @default(ACTIVE)
+  created    DateTime     @default(now())
+  updated    DateTime     @updatedAt
+  UserAuth   UserAuth[]
+  Withdrawal Withdrawal[]
+
+  @@map("users")
+}
+
+enum UserStatus {
+  WITHDRAW
+  ACTIVE
+  INACTIVE
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model UserAuth {
+  id             Int    @id @default(autoincrement())
+  user           Users  @relation(fields: [userId], references: [id])
+  userId         Int    @unique
+  hashedPassword String @db.VarChar(300)
+
+  @@index([userId], map: "user_auth_user_id_fk")
+  @@map("user_auth")
+}
+
+model Withdrawal {
+  id      Int      @id @default(autoincrement())
+  user    Users    @relation(fields: [userId], references: [id])
+  userId  Int      @unique
+  text    String?  @default("입력된 내용이 없습니다.") @db.VarChar(1000)
+  created DateTime @default(now())
+
+  @@index([userId], map: "withdrawal_user_id_fk")
+  @@map("withdrawal")
+}
